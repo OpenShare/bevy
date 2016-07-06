@@ -4,10 +4,13 @@ import tornado.web
 
 # other libraries
 import json
+import threading, time
 
 # import local files
 from database import Database
 from scheduler import Job, Scheduler
+
+SORT_TIMEOUT = 300
 
 # define the Database and Scheduler to be used
 db = Database()
@@ -53,19 +56,32 @@ class JobCheck(tornado.web.RequestHandler):
                 # No content for the count yet
                 status = "Your job has not been processed yet"
             else:
-                count = "0"
+                count = str(int(countCheck))
 
         # Return a formatted json responce
         res = "{\"status\": \"%s\", \"count\": %s}" % (status, count)
         self.write(res)
 
-def main():
+def sortTaskRunner():
+    while True:
+        sc.sortJobs()
+        time.sleep(SORT_TIMEOUT)
+
+def startWeb():
     #Kick off the HTTP server
     server = tornado.web.Application([
         (r"/job", JobCheck),
     ])
     server.listen(8880)
     tornado.ioloop.IOLoop.current().start()
+
+def main():
+    # Start a thread that will run the sorting of jobs
+    scThread = threading.Thread(target=sortTaskRunner, args=())
+    scThread.start()
+
+    webThread = threading.Thread(target=startWeb, args=())
+    webThread.start()
 
 if __name__ == '__main__':
     main()
