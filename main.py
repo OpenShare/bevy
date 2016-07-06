@@ -16,8 +16,11 @@ sc = Scheduler(db)
 ### Job Creation Endpoint
 class JobCheck(tornado.web.RequestHandler):
     def createJob(self, url):
-        # TODO do something here
-        db.JobDB.set(url, "pending")
+        newJob = Job(url)
+
+        # new jobs take high priority
+        newJob.priority = 2
+        db.JobDB.set(url, newJob.to_json())
 
     def get(self):
 
@@ -27,13 +30,34 @@ class JobCheck(tornado.web.RequestHandler):
         # Look up if a job is already in the database
         existingCheck = db.JobDB.get(url);
 
+        # Set headers
+        self.set_header("Content-Type", "application/json")
+        self.set_status(200)
+
+        # Assume everything is OK
+        status = "OK"
+        count = "0"
+
         # Only create one if we don't have an existing job
         if not existingCheck:
             self.createJob(url)
+            # Send back a 202 for now, we are processing
+            self.set_status(202)
+            status = "Your job has been created, check back later for a count"
 
-        # Send back a 202 for now, we are processing
-        self.set_status(202)
-        self.write("A job has been created for your URL. It may be a little while before results show up!")
+        else:
+            # Do we have a count yet?
+            countCheck = db.CountDB.get(url)
+
+            if not countCheck:
+                # No content for the count yet
+                status = "Your job has not been processed yet"
+            else:
+                count = "0"
+
+        # Return a formatted json responce
+        res = "{\"status\": \"%s\", \"count\": %s}" % (status, count)
+        self.write(res)
 
 def main():
     #Kick off the HTTP server
