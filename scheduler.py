@@ -1,4 +1,4 @@
-import hashlib, json, datetime
+import hashlib, json, datetime, threading
 import dateutil.parser
 from scraper import Scraper
 
@@ -130,4 +130,5 @@ class Scheduler:
 
     def spawnJob(self, job, budget):
         scraperJob = Scraper(job, budget, self.db)
-        scraperJob.run()
+        spawnedThread = threading.Thread(target=scraperJob.run, args=())
+        spawnedThread.start()
