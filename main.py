@@ -65,6 +65,7 @@ class JobCheck(tornado.web.RequestHandler):
 def sortTaskRunner():
     while True:
         sc.sortJobs()
+        sc.runJobs()
         time.sleep(SORT_TIMEOUT)
 
 def startWeb():
