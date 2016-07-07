@@ -20,11 +20,13 @@ class Scraper:
         self.budget = budget
         self.db = db
         self.currentCount = self.db.CountDB.get(self.job.url)
+        if not self.currentCount:
+            self.currentCount = 0
 
     def updateCount(self):
-        self.db.CountDB.set(self.job.url, currentCount)
+        self.db.CountDB.set(self.job.url, self.currentCount)
         self.job.lastRun = datetime.datetime.now().isoformat()
-        self.db.set(url, self.job.to_json())
+        self.db.JobDB.set(self.job.url, self.job.to_json())
 
     def run(self):
         self.auth = AppAuthHandler(APP_KEY, APP_SECRET)
@@ -33,4 +35,9 @@ class Scraper:
         if not self.api:
             print("Error running job, could not authenticate")
             return
-        print("authed with twitter")
+
+        # Search for some tweets
+        search_results = self.api.search(q=self.job.url, count=100 * self.budget)
+        addCount = len(search_results)
+        self.currentCount = int(self.currentCount) + addCount
+        self.updateCount()
