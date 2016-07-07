@@ -20,7 +20,7 @@ class Job:
     # Priority 2 = Do first, before any other job
     priority = -1
 
-    lastTweetID = 0
+    maxTweetID = 0
     lastRun = datetime.datetime.utcnow().isoformat()
 
     def __init__(self, url):
@@ -29,14 +29,14 @@ class Job:
         self.internalID = hashlib.sha224(self.url).hexdigest()
 
     def to_json(self):
-        return json.dumps({'internalID': self.internalID, 'priority': self.priority, 'lastRun': self.lastRun, 'lastTweetID': self.lastTweetID})
+        return json.dumps({'internalID': self.internalID, 'priority': self.priority, 'lastRun': self.lastRun, 'maxTweetID': self.maxTweetID})
 
     def from_json(self, newUrl, jsonStr):
         self.url = newUrl.encode('utf-8')
         decoded = json.loads(jsonStr)
         self.internalID = decoded['internalID']
         self.priority = decoded['priority']
-        self.lastTweetID = decoded['lastTweetID']
+        self.maxTweetID = decoded['maxTweetID']
         self.lastRun = decoded['lastRun']
 
 """
