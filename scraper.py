@@ -25,10 +25,13 @@ class Scraper:
 
     def updateCount(self):
         self.db.CountDB.set(self.job.url, self.currentCount)
-        self.job.lastRun = datetime.datetime.now().isoformat()
         self.db.JobDB.set(self.job.url, self.job.to_json())
 
     def run(self):
+        # Update last run datestamp
+        self.job.lastRun = datetime.datetime.now().isoformat()
+        self.db.JobDB.set(self.job.url, self.job.to_json())
+
         self.auth = AppAuthHandler(APP_KEY, APP_SECRET)
         self.api = tweepy.API(self.auth)
 

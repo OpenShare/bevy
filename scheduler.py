@@ -102,7 +102,7 @@ class Scheduler:
                 count = int(count)
 
         # Sort by the time they were last run
-        jobs.sort(key=lambda d: dateutil.parser.parse(job.lastRun))
+        jobs.sort(key=lambda d: dateutil.parser.parse(d.lastRun))
 
         numRequests = 0
         overbudget = False
@@ -119,13 +119,14 @@ class Scheduler:
 
             # If we are about to go over budget then this is the last job we can process for now
             if (numRequests + reqBudget) >= NUM_REQS_MAX:
-                reqBudget = numRequests - NUM_REQS_MAX
+                reqBudget = NUM_REQS_MAX - numRequests
                 overbudget = True
             else:
                 numRequests = numRequests + reqBudget
             print("Budget for %s is %d requests" % (runJob.url, reqBudget))
             self.spawnJob(runJob, reqBudget)
             if overbudget:
+                print("[Scheduler] Out of requests to budget for this 15 minute window!")
                 break
 
     def spawnJob(self, job, budget):
