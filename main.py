@@ -29,7 +29,10 @@ class JobCheck(tornado.web.RequestHandler):
 
         # Try and grab the url they want to track
         url = self.get_argument('url')
-
+        if url == "":
+            self.set_status(400)
+            return
+        url = url.strip()
         # Look up if a job is already in the database
         existingCheck = db.JobDB.get(url);
 
