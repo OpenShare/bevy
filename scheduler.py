@@ -126,7 +126,7 @@ class Scheduler:
             print("Budget for %s is %d requests" % (runJob.url, reqBudget))
             self.spawnJob(runJob, reqBudget)
             if overbudget:
-                break;
+                break
 
     def spawnJob(self, job, budget):
         scraperJob = Scraper(job, budget, self.db)
