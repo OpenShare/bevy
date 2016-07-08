@@ -37,7 +37,7 @@ class Scraper:
             return
 
         # Search for some tweets
-        search_results = tweepy.Cursor(self.api.search, q=self.job.url, rpp=100, since_id=self.job.maxTweetID).pages(self.budget)
+        search_results = tweepy.Cursor(self.api.search, q=self.job.url, count=100, since_id=self.job.maxTweetID).pages(self.budget)
 
         addCount = 0
         for page in search_results:
@@ -47,3 +47,4 @@ class Scraper:
         if addCount != 0:
             self.job.maxTweetID = page[0].id
         self.updateCount()
+        print("%s finished running!" % self.job.url)
