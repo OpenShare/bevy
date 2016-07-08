@@ -37,12 +37,13 @@ class Scraper:
             return
 
         # Search for some tweets
-        self.job.maxTweetID
-        search_results = self.api.search(q=self.job.url, count=100 * self.budget, since_id=self.job.maxTweetID)
-        addCount = len(search_results)
-        if len == 0:
-            return
+        search_results = tweepy.Cursor(self.api.search, q=self.job.url, rpp=100, since_id=self.job.maxTweetID).pages(self.budget)
+
+        addCount = 0
+        for page in search_results:
+            addCount = addCount + len(page)
+
         self.currentCount = int(self.currentCount) + addCount
         if addCount != 0:
-            self.job.maxTweetID = search_results[0].id
+            self.job.maxTweetID = page[0].id
         self.updateCount()
