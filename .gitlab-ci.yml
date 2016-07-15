@@ -6,6 +6,7 @@ deploy_prod:
     - echo "$SSH_PRIVATE_KEY" > id_rsa
     - chmod 0600 id_rsa
     - rsync --copy-unsafe-links -prvzcSle 'ssh -p 22 -o StrictHostKeyChecking=no -i id_rsa' --exclude-from=.rsyncignore ./ twitter@23.239.15.80:~/app/
+    - ssh -p 22 -o StrictHostKeyChecking=no -i id_rsa root@23.239.15.80 systemctl restart twitter-count
   stage: deploy
   environment: production
   only:
