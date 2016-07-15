@@ -38,6 +38,7 @@ class JobCheck(tornado.web.RequestHandler):
 
         # Set headers
         self.set_header("Content-Type", "application/json")
+        self.set_header("Access-Control-Allow-Origin", "*")
         self.set_status(200)
 
         # Assume everything is OK
