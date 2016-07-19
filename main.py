@@ -9,6 +9,7 @@ import threading, time
 # import local files
 from database import Database
 from scheduler import Job, Scheduler
+from urllib.parse import urlparse
 
 SORT_TIMEOUT = 300
 
@@ -35,6 +36,11 @@ class JobCheck(tornado.web.RequestHandler):
         url = url.strip()
         # Look up if a job is already in the database
         existingCheck = db.JobDB.get(url);
+        parsedUrl = urlparse(url)
+        print(parsedUrl)
+        if not u"digitalsurgeons.com" in parsedUrl.path and not u"openshare.social" in parsedUrl.path and not u"hrc.org" in parsedUrl.path:
+            self.set_status(406)
+            return
 
         # Set headers
         self.set_header("Content-Type", "application/json")
