@@ -37,8 +37,12 @@ class JobCheck(tornado.web.RequestHandler):
         # Look up if a job is already in the database
         existingCheck = db.JobDB.get(url);
         parsedUrl = urlparse(url)
-        print(parsedUrl)
-        if not u"digitalsurgeons.com" in parsedUrl.path and not u"openshare.social" in parsedUrl.path and not u"hrc.org" in parsedUrl.path:
+        if not parsedUrl.netloc:
+            check = parsedUrl.path
+        else:
+            check = parsedUrl.netloc
+
+        if not u"digitalsurgeons.com" in check and not u"openshare.social" in check and not u"hrc.org" in check:
             self.set_status(406)
             return
 
