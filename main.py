@@ -28,6 +28,10 @@ class JobCheck(tornado.web.RequestHandler):
 
     def get(self):
 
+        # Set headers
+        self.set_header("Content-Type", "application/json")
+        self.set_header("Access-Control-Allow-Origin", "*")		
+
         # Try and grab the url they want to track
         url = self.get_argument('url')
         if url == "":
@@ -42,13 +46,11 @@ class JobCheck(tornado.web.RequestHandler):
         else:
             check = parsedUrl.netloc
 
+
         if not u"digitalsurgeons.com" in check and not u"openshare.social" in check and not u"hrc.org" in check:
             self.set_status(406)
             return
 
-        # Set headers
-        self.set_header("Content-Type", "application/json")
-        self.set_header("Access-Control-Allow-Origin", "*")
         self.set_status(200)
 
         # Assume everything is OK
