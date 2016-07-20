@@ -41,7 +41,7 @@ class Scheduler:
         jobs = self.getJobs()
 
         for job in jobs:
-            count = self.db.CountDB.get(job.url)
+            count = job.count
 
             # Make sure to convert from Bytes
             if count:
@@ -62,9 +62,10 @@ class Scheduler:
 
     def runJobs(self):
         print("[Scheduler] RUNNING JOBS")
+
         jobs = self.getJobs()
         for job in jobs:
-            count = self.db.CountDB.get(job.url)
+            count = job.count
             if count:
                 count = int(count)
 
