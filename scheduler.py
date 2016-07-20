@@ -20,9 +20,11 @@ class Scheduler:
         job.priority = newPriority
 
     def getJobs(self):
-        # Grab all the jobs in the database
+        # Grab max jobs from the database sorting on key
         jobs = []
-        keys = self.db.JobDB.keys()
+
+        # Get keys sorted by the last time they were updated
+        keys = self.db.JobDB.sort("timestamp", by="score", start=0, num=25)
 
         # Collect jobs into
         for key in keys:
@@ -33,44 +35,16 @@ class Scheduler:
 
         return jobs
 
-    # Goes though each job in the database and evals the priority
-    def sortJobs(self):
-        print("[Scheduler] Sorting jobs...")
-
-        sortedJobs = []
-        jobs = self.getJobs()
-
-        for job in jobs:
-            count = job.count
-
-            # Make sure to convert from Bytes
-            if count:
-                count = int(count)
-
-            # If the job is brand new, then it needs to be done ASAP
-            if not count:
-                self.updatePriority(job, 2)
-            # Counts more than 2k get a higher update rate
-            elif count >= 2000:
-                self.updatePriority(job, 1)
-            # Counts any lower than this get updated less
-            else:
-                self.updatePriority(job, 0)
-            # Push into list to sort
-            sortedJobs.append(job)
-        print("[Scheduler] Done sorting jobs")
-
     def runJobs(self):
         print("[Scheduler] RUNNING JOBS")
 
         jobs = self.getJobs()
         for job in jobs:
-            count = job.count
-            if count:
-                count = int(count)
-
-        # Sort by the time they were last run
-        jobs.sort(key=lambda d: dateutil.parser.parse(d.lastRun))
+            job.count = self.db.CountDB.get(job.url)
+            if not job.count:
+                job.count = 0
+            else:
+                job.count = int(job.count)
 
         numRequests = 0
         overbudget = False
@@ -78,9 +52,9 @@ class Scheduler:
             reqBudget = 0
 
             # Give the job a request budget based on priority
-            if runJob.priority == 0:
+            if runJob.count < 1000:
                 reqBudget = NUM_REQS_PER_JOB_MAX_MIN
-            elif runJob.priority == 1:
+            elif runJob.count > 1000 and runJob.count < 5000:
                 reqBudget = NUM_REQS_PER_JOB_MAX_MID
             else:
                 reqBudget = NUM_REQS_PER_JOB_MAX_MAX

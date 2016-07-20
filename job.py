@@ -8,7 +8,6 @@ class Job:
     url = None
     internalID = None
     count = 0
-    priority = -1
     maxTweetID = 0
 
     def __init__(self, url):
@@ -20,7 +19,6 @@ class Job:
         return json.dumps({'internalID': self.internalID, 'priority': self.priority, 'maxTweetID': self.maxTweetID})
 
     def from_json(self, jsonStr):
-        self.url = newUrl.encode('utf-8')
         decoded = json.loads(jsonStr)
         self.internalID = decoded['internalID']
         self.priority = decoded['priority']
@@ -31,7 +29,7 @@ class Job:
         db.set(self.url, self.to_json())
 
         # Set score to the current timestamp (the last time this was run)
-        db.zadd(self.url, 'last_update', time.time())
+        db.zadd("timestamp", float(time.time()), self.url)
 
     def load(self, db):
         json_data = db.get(self.url)
