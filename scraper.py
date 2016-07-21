@@ -1,11 +1,5 @@
-import datetime, tweepy, configparser
+import datetime, tweepy
 from tweepy.auth import AppAuthHandler
-
-Config = configparser.ConfigParser()
-Config.read("keys.ini")
-
-APP_KEY = Config.get("API", "KEY")
-APP_SECRET = Config.get("API", "SECRET")
 
 """
 This class runs within a new thread each time
@@ -28,11 +22,16 @@ class Scraper:
         self.db.JobDB.set(self.job.url, self.job.to_json())
 
     def run(self):
-        # Update last run datestamp
-        self.job.lastRun = datetime.datetime.now().isoformat()
-        self.db.JobDB.set(self.job.url, self.job.to_json())
+        # Lookup the keys of the URL owner
+        ownerKey = self.db.Whitelist.get(self.job.url)
+        keys = self.db.Users.get(ownerKey)
 
-        self.auth = AppAuthHandler(APP_KEY, APP_SECRET)
+        if not keys:
+            print("Can't run %s as it has no onwer!" % self.job.url)
+            return
+
+        keys = keys.decode('utf-8').split('|')
+        self.auth = AppAuthHandler(keys[0], keys[1])
         self.api = tweepy.API(self.auth)
 
         if not self.api:
