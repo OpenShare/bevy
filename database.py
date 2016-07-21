@@ -10,3 +10,9 @@ class Database:
 
         # Create another connection to the job queue database
         self.JobDB = redis.StrictRedis(host='localhost', port=6379, db=1)
+
+        # Connection for the whitelist database
+        self.Whitelist = redis.StrictRedis(host='localhost', port=6379, db=2)
+
+        # Connection for user and twitter keys
+        self.Users = redis.StrictRedis(host='localhost', port=6379, db=3)
