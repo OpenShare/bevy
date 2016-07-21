@@ -21,7 +21,6 @@ class Job:
     def from_json(self, jsonStr):
         decoded = json.loads(jsonStr)
         self.internalID = decoded['internalID']
-        self.priority = decoded['priority']
         self.maxTweetID = decoded['maxTweetID']
 
     def commit(self, db):
