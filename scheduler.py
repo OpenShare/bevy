@@ -1,43 +1,11 @@
-import hashlib, json, datetime, threading
-import dateutil.parser
+import threading, dateutil.parser
+from job import Job
 from scraper import Scraper
 
 NUM_REQS_PER_JOB_MAX_MIN = 10 # Max number of requests for low priority job
 NUM_REQS_PER_JOB_MAX_MID = 20 # Max number of requests for medium priority jobs
 NUM_REQS_PER_JOB_MAX_MAX = 40 # Max number of requests for highest priority jobs
 NUM_REQS_MAX = 450
-
-"""
-Jobs define run tasks for the Scheduler to run
-"""
-class Job:
-    url = None
-    internalID = None
-
-    # Priority -1 = Not set
-    # Priority 0 = Can be done whenever
-    # Priority 1 = Should be done ASAP
-    # Priority 2 = Do first, before any other job
-    priority = -1
-
-    maxTweetID = 0
-    lastRun = datetime.datetime.utcnow().isoformat()
-
-    def __init__(self, url):
-        self.url = url
-        self.url = self.url.encode('utf-8')
-        self.internalID = hashlib.sha224(self.url).hexdigest()
-
-    def to_json(self):
-        return json.dumps({'internalID': self.internalID, 'priority': self.priority, 'lastRun': self.lastRun, 'maxTweetID': self.maxTweetID})
-
-    def from_json(self, newUrl, jsonStr):
-        self.url = newUrl.encode('utf-8')
-        decoded = json.loads(jsonStr)
-        self.internalID = decoded['internalID']
-        self.priority = decoded['priority']
-        self.maxTweetID = decoded['maxTweetID']
-        self.lastRun = decoded['lastRun']
 
 """
 This class takes care of tracking rate limits as well as
@@ -50,59 +18,33 @@ class Scheduler:
     def updatePriority(self, job, newPriority):
         # Update the priority in the database
         job.priority = newPriority
-        self.db.JobDB.set(job.url, job.to_json())
 
     def getJobs(self):
-        # Grab all the jobs in the database
+        # Grab max jobs from the database sorting on key
         jobs = []
-        keys = self.db.JobDB.keys()
+
+        # Get keys sorted by the last time they were updated
+        keys = self.db.JobDB.sort("timestamp", by="score", start=0, num=25)
 
         # Collect jobs into
         for key in keys:
             url = key.decode('utf-8')
-            value = self.db.JobDB.get(key)
             newJob = Job(url)
-            newJob.from_json(url, value.decode('utf-8'))
+            newJob.load(self.db.JobDB)
             jobs.append(newJob)
+
         return jobs
-
-    # Goes though each job in the database and evals the priority
-    def sortJobs(self):
-        print("[Scheduler] Sorting jobs...")
-
-        sortedJobs = []
-        jobs = self.getJobs()
-
-        for job in jobs:
-            count = self.db.CountDB.get(job.url)
-
-            # Make sure to convert from Bytes
-            if count:
-                count = int(count)
-
-            # If the job is brand new, then it needs to be done ASAP
-            if not count:
-                self.updatePriority(job, 2)
-            # Counts more than 2k get a higher update rate
-            elif count >= 2000:
-                self.updatePriority(job, 1)
-            # Counts any lower than this get updated less
-            else:
-                self.updatePriority(job, 0)
-            # Push into list to sort
-            sortedJobs.append(job)
-        print("[Scheduler] Done sorting jobs")
 
     def runJobs(self):
         print("[Scheduler] RUNNING JOBS")
+
         jobs = self.getJobs()
         for job in jobs:
-            count = self.db.CountDB.get(job.url)
-            if count:
-                count = int(count)
-
-        # Sort by the time they were last run
-        jobs.sort(key=lambda d: dateutil.parser.parse(d.lastRun))
+            job.count = self.db.CountDB.get(job.url)
+            if not job.count:
+                job.count = 0
+            else:
+                job.count = int(job.count)
 
         numRequests = 0
         overbudget = False
@@ -110,9 +52,9 @@ class Scheduler:
             reqBudget = 0
 
             # Give the job a request budget based on priority
-            if runJob.priority == 0:
+            if runJob.count < 1000:
                 reqBudget = NUM_REQS_PER_JOB_MAX_MIN
-            elif runJob.priority == 1:
+            elif runJob.count > 1000 and runJob.count < 5000:
                 reqBudget = NUM_REQS_PER_JOB_MAX_MID
             else:
                 reqBudget = NUM_REQS_PER_JOB_MAX_MAX

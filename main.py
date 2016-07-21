@@ -23,8 +23,7 @@ class JobCheck(tornado.web.RequestHandler):
         newJob = Job(url)
 
         # new jobs take high priority
-        newJob.priority = 2
-        db.JobDB.set(url, newJob.to_json())
+        newJob.commit(db.JobDB)
 
     def get(self):
 
@@ -39,17 +38,12 @@ class JobCheck(tornado.web.RequestHandler):
             return
         url = url.strip()
         # Look up if a job is already in the database
-        existingCheck = db.JobDB.get(url);
+        existingCheck = db.JobDB.get(url)
         parsedUrl = urlparse(url)
         if not parsedUrl.netloc:
             check = parsedUrl.path
         else:
             check = parsedUrl.netloc
-
-
-        if not u"digitalsurgeons.com" in check and not u"openshare.social" in check and not u"hrc.org" in check:
-            self.set_status(406)
-            return
 
         self.set_status(200)
 
@@ -80,7 +74,6 @@ class JobCheck(tornado.web.RequestHandler):
 
 def sortTaskRunner():
     while True:
-        sc.sortJobs()
         sc.runJobs()
         time.sleep(SORT_TIMEOUT)
 
