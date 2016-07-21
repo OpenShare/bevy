@@ -16,7 +16,7 @@ class Job:
         self.internalID = hashlib.sha224(self.url).hexdigest()
 
     def to_json(self):
-        return json.dumps({'internalID': self.internalID, 'priority': self.priority, 'maxTweetID': self.maxTweetID})
+        return json.dumps({'internalID': self.internalID, 'maxTweetID': self.maxTweetID})
 
     def from_json(self, jsonStr):
         decoded = json.loads(jsonStr)
