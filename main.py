@@ -29,14 +29,34 @@ class JobCheck(tornado.web.RequestHandler):
 
         # Set headers
         self.set_header("Content-Type", "application/json")
-        self.set_header("Access-Control-Allow-Origin", "*")		
+        self.set_header("Access-Control-Allow-Origin", "*")
 
-        # Try and grab the url they want to track
+        # Try and grab the url they want to track and their API key
         url = self.get_argument('url')
+        apiKey = self.get_argument('key')
+
         if url == "":
             self.set_status(400)
             return
         url = url.strip()
+        apiKey = apiKey.strip()
+
+        # Check the URL whitelist
+        wlCheck = db.Whitelist.get(url)
+
+        # This URL was not found in the whitelist database
+        if not wlCheck:
+            self.set_status(406, "URL Not Whitelisted")
+            return
+
+        # Check if the user owns this URL (URL against KEY)
+        wlCheck = wlCheck.decode('utf-8')
+        if wlCheck != apiKey:
+            self.set_status(401, "URL and API Key Mismatch")
+            return
+
+        # All checks passed we can continue!
+
         # Look up if a job is already in the database
         existingCheck = db.JobDB.get(url)
         parsedUrl = urlparse(url)
