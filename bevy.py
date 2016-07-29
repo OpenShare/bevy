@@ -5,11 +5,11 @@ import tornado.web
 # other libraries
 import json
 import threading, time
+from urllib.parse import urlparse
 
 # import local files
 from database import Database
 from scheduler import Job, Scheduler
-from urllib.parse import urlparse
 
 SORT_TIMEOUT = 300
 
