@@ -23,7 +23,7 @@ class JobCheck(tornado.web.RequestHandler):
         newJob = Job(url)
 
         # new jobs take high priority
-        newJob.commit(db.JobDB)
+        newJob.commit(db.JobDB, 0)
 
     def get(self):
 

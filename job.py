@@ -23,12 +23,20 @@ class Job:
         self.internalID = decoded['internalID']
         self.maxTweetID = decoded['maxTweetID']
 
-    def commit(self, db):
+    def commit(self, db, scoreOverride = None):
         # Commit to the database
         db.set(self.url, self.to_json())
 
+        score = 0
+
+        if scoreOverride:
+            score = scoreOverride
+        else:
+            score = float(time.time())
+
         # Set score to the current timestamp (the last time this was run)
-        db.zadd("timestamp", float(time.time()), self.url)
+        db.zadd("timestamp", score, self.url)
+        print("set score of %s to %d" % (self.url, score))
 
     def load(self, db):
         json_data = db.get(self.url)
