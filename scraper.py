@@ -19,6 +19,7 @@ class Scraper:
 
     def updateCount(self):
         self.job.commit(self.db.JobDB)
+        self.db.CountDB.set(self.job.url, self.currentCount)
 
     def run(self):
         # Lookup the keys of the URL owner
