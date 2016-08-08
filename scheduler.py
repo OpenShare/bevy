@@ -24,7 +24,7 @@ class Scheduler:
         jobs = []
 
         # Get keys sorted by the last time they were updated
-        keys = self.db.JobDB.sort("timestamp", by="score", start=0, num=25)
+        keys = self.db.JobDB.zrange("timestamp", 0, 25)
 
         # Collect jobs into
         for key in keys:
