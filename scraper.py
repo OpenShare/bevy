@@ -31,8 +31,13 @@ class Scraper:
             return
 
         keys = keys.decode('utf-8').split('|')
-        self.auth = AppAuthHandler(keys[0], keys[1])
-        self.api = tweepy.API(self.auth)
+
+        try:
+            self.auth = AppAuthHandler(keys[0].strip(), keys[1].strip())
+            self.api = tweepy.API(self.auth)
+        except tweepy.error.TweepError:
+            print("Error running for URL %s" % self.job.url)
+            return
 
         if not self.api:
             print("Error running job, could not authenticate")
